@@ -26,25 +26,30 @@ app.get("/api/hello", function (req, res) {
 
 
 app.get("/api/:date?", function (req, res) {
-  var inputDate = req.params.date;
-  var date = new Date(Number(inputDate));
+  let inputDate = req.params.date;
+  let isValidDate = Date.parse(inputDate); 
+  let isValidUnixNumber = /^[0-9]+$/.test(inputDate)
+  let isEmpty = inputDate == "" || inputDate == null;
 
-  var isValidDate = Date.parse(inputDate);
+  let unixOutput = 0;
+  let utcOutput  = "";
 
-  console.log(isValidDate);
-  if (isValidDate){
-    date = new Date(Number(isValidDate));
-  } else if (!isNaN(date.getTime())) {
-    date = new Date(Number(inputDate));
-  } else {
-    date = new Date();
-    inputDate = Math.floor(date.getTime() / 1000);
+  if (isValidDate) {
+    unixOutput = new Date(inputDate);
+    utcOutput  = unixOutput.toUTCString();
+    return res.json({unix : unixOutput.valueOf(), utc : utcOutput});
   }
-
-  if(!isNaN(date.getTime()) || !isNaN(isValidDate.getTime())) {
-    var utcDate = date.toUTCString();
-    res.json({unix: inputDate, utc: utcDate});
-  } else {
+  else if (isNaN(isValidDate) && isValidUnixNumber) {
+    unixOutput = new Date(parseInt(inputDate));
+    utcOutput  = unixOutput.toUTCString();
+    return res.json({unix : unixOutput.valueOf(), utc : utcOutput});
+  }
+  else if (isEmpty) {
+    unixOutput = new Date();
+    utcOutput  = unixOutput.toUTCString();
+    return res.json({unix : unixOutput.valueOf(), utc : utcOutput});  
+  }
+  else {
     res.json({error: "Invalid Date"});
   }
   
